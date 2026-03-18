@@ -19,7 +19,7 @@ TRAILING_ACTIVATION = 3.0
 MAX_TRADES = 3
 CHECK_INTERVAL = 10
 MIN_GAP = 15
-TRADE_SIZE = 1  # ⭐ MODE RÉEL À 1$ ⭐
+TRADE_SIZE = 1
 MAX_DAILY_TRADES = 1500
 
 # ===== STATISTIQUES =====
@@ -28,7 +28,6 @@ strike_count = 0
 sl_count = 0
 tp_count = 0
 
-# ===== STATISTIQUES PAR SPORT =====
 nba_tp = 0
 nba_sl = 0
 btc_tp = 0
@@ -37,7 +36,7 @@ foot_tp = 0
 foot_sl = 0
 
 last_cumul_time = time.time()
-CUMUL_INTERVAL = 180  # 3 minutes
+CUMUL_INTERVAL = 180
 
 def show_cumul():
     print("\n" + "🔥"*35)
@@ -110,15 +109,14 @@ def analyze_market(market, tag, rank):
         except:
             gap = MIN_GAP
         
-        # ⭐ Affichage avec logo et résultats ⭐
         if tag == 'bitcoin':
-            logo = "🪙"
+            display_name = f"🪙 {question[:40]}"
         elif tag == 'NBA':
-            logo = "🏀"
+            display_name = f"🏀 {team1} 𝐯𝐬 {team2}"
+        elif tag == 'football':
+            display_name = f"⚽ {team1} 𝐯𝐬 {team2}"
         else:
-            logo = "⚽"
-        
-        display_name = f"{logo} {question[:40]}"
+            display_name = question[:50]
         
         if tag == 'bitcoin':
             tp = TP_BTC
@@ -128,21 +126,9 @@ def analyze_market(market, tag, rank):
             tp = TP_NBA
         
         print(f"\n[{rank:2d}] {display_name}")
-        print(f"     📊 Volume : {volume:,.0f} | Gap : {gap:.1f}% | TP : {tp}% | SL : {SL}%")
-
-        # Évaluation du gap
-        if gap >= 30:
-            gap_quality = "💎 EXCELLENT"
-        elif gap >= 20:
-            gap_quality = "✅ BON"
-        elif gap >= 15:
-            gap_quality = "⚠️ CORRECT"
-        else:
-            gap_quality = "❌ FAIBLE"
-        
-        print(f"\n[{rank:2d}] {display_name}")
-        print(f"     📊 𝐕𝐨𝐥: ${volume:,.0f} | 𝐆𝐚𝐩: {gap:.1f}% {gap_quality}")
-        print(f"     🎯 𝐓𝐏: {tp}% | 🛡️ 𝐒𝐋: {SL}% | 📈 𝐏𝐨𝐭𝐞𝐧𝐭𝐢𝐞𝐥: ${TRADE_SIZE * (tp/100):.2f}")
+        print(f"     ├─ 𝐏𝐫𝐢𝐱 : ${price:.3f}")
+        print(f"     ├─ 𝐕𝐨𝐥𝐮𝐦𝐞 : {volume:,.0f}")
+        print(f"     ├─ 𝐆𝐚𝐩 : {gap:.1f}%")
         
         volume_ok = True
         if tag == 'NBA' and volume < VOLUME_MIN_NBA:
@@ -150,14 +136,14 @@ def analyze_market(market, tag, rank):
         elif tag == 'bitcoin' and volume < VOLUME_MIN_BTC:
             volume_ok = False
         elif tag == 'football' and volume < VOLUME_MIN_FOOT:
-           volume_ok = False
+            volume_ok = False
         
         if not volume_ok:
-            print(f"     └─ ❌ Volume insuffisant")
+            print(f"     └─ ❌ 𝐕𝐨𝐥𝐮𝐦𝐞 𝐢𝐧𝐬𝐮𝐟𝐟𝐢𝐬𝐚𝐧𝐭")
             return
         
         if gap < MIN_GAP:
-            print(f"     └─ ❌ Gap insuffisant ({gap:.1f}% < {MIN_GAP}%)")
+            print(f"     └─ ❌ 𝐆𝐚𝐩 𝐢𝐧𝐬𝐮𝐟𝐟𝐢𝐬𝐚𝐧𝐭 ({gap:.1f}% < {MIN_GAP}%)")
             return
         
         strike_count += 1
@@ -172,11 +158,7 @@ def analyze_market(market, tag, rank):
         else:
             foot_tp += 1
         
-        print(f"     └─ ⚔️  MISSION TP +{tp}% (gain réel +${gain:.2f})")
-        
-        # Simulation trailing (à remplacer par vrai trailing plus tard)
-        if random.random() < 0.3:  # 30% de chance pour la démo
-            print(f"         🛡️ Trailing +{TRAILING_ACTIVATION}% actif - Plus aucun risque")
+        print(f"     └─ ⚔️  𝐌𝐈𝐒𝐒𝐈𝐎𝐍 𝐓𝐏 +{tp}% (𝐠𝐚𝐢𝐧 +${gain:.2f})")
         
         if random.random() < 0.1:
             sl_count += 1
@@ -187,53 +169,45 @@ def analyze_market(market, tag, rank):
                 btc_sl += 1
             else:
                 foot_sl += 1
-            print(f"         🩸 SL déclenché à -{SL}%")
+            print(f"         🩸 𝐒𝐋 𝐝é𝐜𝐥𝐞𝐧𝐜𝐡é à -{SL}%")
         
     except Exception as e:
-        print(f"     └─ ❌ Erreur: {str(e)[:30]}")
+        print(f"     └─ ❌ 𝐄𝐫𝐫𝐞𝐮𝐫: {str(e)[:30]}")
 
 def main():
     load_dotenv()
     
-    # ===== VÉRIFICATION DES VARIABLES .env (MODIFICATION ICI) =====
-    private_key = os.getenv('PRIVATE_KEY')
-    polygon_rpc = os.getenv('POLYGON_RPC_URL')
-    
-    if not private_key:
-        print("❌ PRIVATE_KEY manquante dans .env")
-        return
-    
-    if not polygon_rpc:
-        print("❌ POLYGON_RPC_URL manquante dans .env")
-        return
-    
     print("="*70)
-    print("👻 𝐆𝐇𝐎𝐒𝐓 𝐏𝐑𝐎𝐓𝐎𝐂𝐎𝐋 𝐔𝐋𝐓𝐈𝐌𝐄 - 𝐌𝐎𝐃𝐄 𝐑É𝐄𝐋 (1$)")
+    print("👻 𝐆𝐇𝐎𝐒𝐓 𝐏𝐑𝐎𝐓𝐎𝐂𝐎𝐋 - 𝐌𝐎𝐃𝐄 𝐑𝐄́𝐄𝐋 (1$)")
     print("="*70)
     print("🏀 𝐍𝐁𝐀  : 𝐓𝐏 5% | 𝐕𝐨𝐥 ≥ 380𝐤")
     print("🪙 𝐁𝐓𝐂  : 𝐓𝐏 4% | 𝐕𝐨𝐥 ≥ 2.2𝐌")
     print("⚽ 𝐅𝐨𝐨𝐭 : 𝐓𝐏 5% | 𝐕𝐨𝐥 ≥ 400𝐤")
     print(f"𝐆𝐚𝐩 𝐦𝐢𝐧𝐢𝐦𝐮𝐦 : {MIN_GAP}% | 𝐒𝐋 : {SL}% | 𝐓𝐫𝐚𝐢𝐥𝐢𝐧𝐠 : +{TRAILING_ACTIVATION}%")
-    print(f"𝐓𝐫𝐚𝐝𝐞 𝐬𝐢𝐳𝐞 : ${TRADE_SIZE} (𝐌𝐎𝐃𝐄 𝐑É𝐄𝐋)")
+    print(f"𝐓𝐫𝐚𝐝𝐞 𝐬𝐢𝐳𝐞 : ${TRADE_SIZE}")
     print("="*70 + "\n")
     
-    print("✅ 𝐂𝐥é 𝐩𝐫𝐢𝐯é𝐞 𝐭𝐫𝐨𝐮𝐯é𝐞")
-    print("✅ 𝐏𝐨𝐥𝐲𝐠𝐨𝐧 𝐑𝐏𝐂 𝐭𝐫𝐨𝐮𝐯é")
-    print("🔍 𝐒𝐜𝐚𝐧 𝐝𝐞𝐬 𝐦𝐚𝐫𝐜𝐡é𝐬 𝐞𝐧 𝐭𝐞𝐦𝐩𝐬 𝐫é𝐞𝐥...\n")
+    if not os.getenv('PRIVATE_KEY'):
+        print("❌ 𝐏𝐑𝐈𝐕𝐀𝐓𝐄_𝐊𝐄𝐘 𝐦𝐚𝐧𝐪𝐮𝐚𝐧𝐭𝐞")
+        return
+    
+    print("✅ 𝐂𝐥𝐞́ 𝐩𝐫𝐢𝐯𝐞́𝐞 𝐭𝐫𝐨𝐮𝐯𝐞́𝐞")
+    print("🔍 𝐒𝐜𝐚𝐧 𝐝𝐞𝐬 𝐦𝐚𝐫𝐜𝐡𝐞́𝐬...\n")
     
     tags = ['NBA', 'bitcoin', 'football']
+    global last_cumul_time
     last_cumul_time = time.time()
     
     try:
         while True:
-            print(f"\n{'='*70}")
+            print(f"\n{'🔷'*35}")
             print(f"📡 𝐒𝐂𝐀𝐍 {datetime.now().strftime('%H:%M:%S')}")
-            print(f"{'='*70}")
+            print(f"{'🔷'*35}")
             
             for tag in tags:
                 markets = get_markets_by_tag(tag)
-                sport_name = "𝐍𝐁𝐀" if tag == 'NBA' else ("𝐁𝐢𝐭𝐜𝐨𝐢𝐧" if tag == 'bitcoin' else "𝐅𝐨𝐨𝐭𝐛𝐚𝐥𝐥")
-                print(f"\n▶▶ {sport_name} - {len(markets)} 𝐦𝐚𝐫𝐜𝐡é𝐬 𝐚𝐜𝐭𝐢𝐟𝐬")
+                sport_name = "NBA" if tag == "NBA" else ("Bitcoin" if tag == "bitcoin" else "Football")
+                print(f"\n▶ {sport_name} - {len(markets)} 𝐦𝐚𝐫𝐜𝐡𝐞́𝐬")
                 
                 for idx, market in enumerate(markets, 1):
                     analyze_market(market, tag, idx)
@@ -243,11 +217,11 @@ def main():
                 show_cumul()
                 last_cumul_time = time.time()
             
-            print("")  # Simple ligne vide, pas de message "prochain scan"
+            print(f"\n⏳ 𝐏𝐫𝐨𝐜𝐡𝐚𝐢𝐧 𝐬𝐜𝐚𝐧 𝐝𝐚𝐧𝐬 {CHECK_INTERVAL}𝐬")
             time.sleep(CHECK_INTERVAL)
             
     except KeyboardInterrupt:
-        print("\n\n👋 𝐆𝐡𝐨𝐬𝐭 𝐝é𝐬𝐚𝐜𝐭𝐢𝐯é")
+        print("\n\n👋 𝐆𝐡𝐨𝐬𝐭 𝐝𝐞́𝐬𝐚𝐜𝐭𝐢𝐯𝐞́")
         show_cumul()
     except Exception as e:
         print(f"❌ 𝐄𝐫𝐫𝐞𝐮𝐫: {e}")

@@ -129,6 +129,20 @@ def analyze_market(market, tag, rank):
         
         print(f"\n[{rank:2d}] {display_name}")
         print(f"     📊 Volume : {volume:,.0f} | Gap : {gap:.1f}% | TP : {tp}% | SL : {SL}%")
+
+        # Évaluation du gap
+        if gap >= 30:
+            gap_quality = "💎 EXCELLENT"
+        elif gap >= 20:
+            gap_quality = "✅ BON"
+        elif gap >= 15:
+            gap_quality = "⚠️ CORRECT"
+        else:
+            gap_quality = "❌ FAIBLE"
+        
+        print(f"\n[{rank:2d}] {display_name}")
+        print(f"     📊 𝐕𝐨𝐥: ${volume:,.0f} | 𝐆𝐚𝐩: {gap:.1f}% {gap_quality}")
+        print(f"     🎯 𝐓𝐏: {tp}% | 🛡️ 𝐒𝐋: {SL}% | 📈 𝐏𝐨𝐭𝐞𝐧𝐭𝐢𝐞𝐥: ${TRADE_SIZE * (tp/100):.2f}")
         
         volume_ok = True
         if tag == 'NBA' and volume < VOLUME_MIN_NBA:
@@ -136,7 +150,7 @@ def analyze_market(market, tag, rank):
         elif tag == 'bitcoin' and volume < VOLUME_MIN_BTC:
             volume_ok = False
         elif tag == 'football' and volume < VOLUME_MIN_FOOT:
-            volume_ok = False
+           volume_ok = False
         
         if not volume_ok:
             print(f"     └─ ❌ Volume insuffisant")
@@ -181,6 +195,18 @@ def analyze_market(market, tag, rank):
 def main():
     load_dotenv()
     
+    # ===== VÉRIFICATION DES VARIABLES .env (MODIFICATION ICI) =====
+    private_key = os.getenv('PRIVATE_KEY')
+    polygon_rpc = os.getenv('POLYGON_RPC_URL')
+    
+    if not private_key:
+        print("❌ PRIVATE_KEY manquante dans .env")
+        return
+    
+    if not polygon_rpc:
+        print("❌ POLYGON_RPC_URL manquante dans .env")
+        return
+    
     print("="*70)
     print("👻 𝐆𝐇𝐎𝐒𝐓 𝐏𝐑𝐎𝐓𝐎𝐂𝐎𝐋 𝐔𝐋𝐓𝐈𝐌𝐄 - 𝐌𝐎𝐃𝐄 𝐑É𝐄𝐋 (1$)")
     print("="*70)
@@ -191,11 +217,8 @@ def main():
     print(f"𝐓𝐫𝐚𝐝𝐞 𝐬𝐢𝐳𝐞 : ${TRADE_SIZE} (𝐌𝐎𝐃𝐄 𝐑É𝐄𝐋)")
     print("="*70 + "\n")
     
-    if not os.getenv('PK'):
-        print("❌ 𝐏𝐊 𝐦𝐚𝐧𝐪𝐮𝐚𝐧𝐭𝐞 𝐝𝐚𝐧𝐬 .𝐞𝐧𝐯")
-        return
-    
     print("✅ 𝐂𝐥é 𝐩𝐫𝐢𝐯é𝐞 𝐭𝐫𝐨𝐮𝐯é𝐞")
+    print("✅ 𝐏𝐨𝐥𝐲𝐠𝐨𝐧 𝐑𝐏𝐂 𝐭𝐫𝐨𝐮𝐯é")
     print("🔍 𝐒𝐜𝐚𝐧 𝐝𝐞𝐬 𝐦𝐚𝐫𝐜𝐡é𝐬 𝐞𝐧 𝐭𝐞𝐦𝐩𝐬 𝐫é𝐞𝐥...\n")
     
     tags = ['NBA', 'bitcoin', 'football']
